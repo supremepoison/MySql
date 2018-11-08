@@ -1,0 +1,267 @@
+Day03笔记
+1.SQL查询
+    1.distinct:不显示字段的重复值
+        1.示例
+            1.sanguo表中有那些国家
+            select distinct country from sanguo
+            2.sanguo表中有几个国家
+        2.注意
+            distinct 和 from 之间所有字段值都相同才会去重
+    2.查询表记录时做数学运算
+        1.运算符: + - * / % 
+        2.示例  
+            1.查询表记录时所有英雄攻击力翻倍
+            select name, gongji * 2 as double from sanguo;
+
+2.嵌套查询(子查询)
+    1.定义: 把内层的查询结果作为外层查询的条件
+    2.语法
+        select ... from 表名 where 字段名 运算符(select ...)
+    3.示例
+        1.把攻击值小于平均攻击值的英雄名字和攻击值差出来
+        select name, gongji from sanguo where gongji < (select avg(gongji) from sanguo);
+        2.找出每个国家攻击力最高的英雄的名字和攻击值
+        select gongji ,name from sanguo where(country, gongji) in (select country, max(gongji) from sanguo group by country);
+
+3.多表查询
+    1.两种方式
+        1.不加where条件(笛卡尔积)
+        select t1.name, t2.name from t1,t2;
+
+        2.加where条件
+        select 字段名列表 from 表1,表2 where 条件;
+
+        3.示例
+            1.查询省. 市详细信息
+            河北省 石家庄市
+            河北省 廊坊市
+            湖北省 武汉市
+            select sheng.s_name, city.c_name, xian.x_name from sheng, city, xian where cfather_id = s_id and c_id = xfather_id;
+
+
+4.连接查询
+    1.内连接(inner join)
+        1.语法格式
+            select ... from 表1 inner join 表2 on 条件
+            inner join 表3 on 条件
+            inner join 表4 on 条件
+            ....;
+        2.示例
+            查找省和市的详细信息
+            select sheng.s_name, city.c_name from sheng inner join city on cfather_id = s_id;
+            查找省 市 县 的详细信息
+            select sheng.s_name, city.c_name,xian.x_name from sheng 
+            inner join city on cfather_id = s_id 
+            inner join xian on xfather_id = c_id;
+
+
+    2.外连接
+        1.左连接(left join)
+            以左表为主显示查询结果
+            select sheng.s_name, city.c_name from sheng left join city on sheng.s_id = city.cfather_id;
+
+        2.右连接(right join)
+            以右表为主显示查询结果
+            select sheng.s_name, city.c_name from sheng right join city on sheng.s_id = city.cfather_id;
+
+5.约束
+
+    1.非空约束(not null)
+        1.不允许该字段的值为NULL
+             -> name varchar(20) not null,
+    
+
+    2.默认约束(default)
+        1/插入记录时,不给该字段赋值,则使用默认值
+            -> sex enum('M','F','S') default 'S'
+
+6.索引
+ /var/lib/mysql/db3/ t1.frm t1.ibd
+    1.定义
+        对数据库表的一列或者多列的值进行排序的一种结构(BTREE方式)
+    2.优点
+        加快数据的检索(查询)速度
+    3.缺点
+        1.索引需要占用物理存储空间
+        2.当对表中的数据更新时,索引需要动态维护,占用系统资源,降低数据的维护速度
+    4.示例
+        1.开始运行时间检测
+            set profiling= 1;
+        2.执行查询语句(没有索引)
+            select name from t1 where name = 'lucy8888';
+        3.在name字段创建索引
+            create index name on t1(name);
+        4.再执行查询语句(有索引)
+            select name from t1 where name = 'lucy8888';
+        5.对比执行时间 
+            show profiles;
+
+7.索引分类
+    1.普通索引(index) && 唯一索引(unique)
+        1.使用规则
+            1.可设置多个字段
+            2.约束
+                普通索引:无约束
+                    key标志: MUL
+                唯一索引:字段值不允许重复,可为NULL  
+                    key标志:UNI
+            3.把经常用来查询的字段设置为索引字段
+
+        2.创建表的时候创建
+            create table 表名(
+                ....
+                index(name),
+                index(age),
+                unique(phnumber),
+                unique(cardnumber)
+            );
+        3.已有表创建
+            create [unique] index 索引名 on 表名(字段名);
+        
+        4.查看索引
+            1. desc 表名; -->key标志
+            2. show index from 表名\G;
+        5.删除索引
+            drop index 索引名 on 表名;
+
+    2.主键(primary key) && 自增长(auto_increment)
+        1.使用规则
+            1.只能有一个字段设置为主键
+            2.约束:
+                字段值不能重复,且不能为NULL
+            3.KEY标志: PRI
+            4.通常设置编号id为主键,能够唯一锁定一条记录
+        2.创建表时创建
+            create table 表名(
+                id int primary key auto_increment,
+                ....
+                ....
+                index()
+            );
+            ****************************
+            复合主键(基本用不上)
+            create table 表名(
+                id int auto_increment,
+                name varchar(20),
+                primary key(id,name)
+            );
+            ****************************
+        3.在已有表创建
+            alter table 表名 add primary key(id);
+        4.删除
+            1.先删除自增长
+            alter table 表名 modify id int;
+
+            2.删除主键
+            alter table 表名 drop primary key;(如果没有自增长属性)
+
+
+    3.外键(foreign key)
+        1.定义: 让当前表字段的值在另一个表的范围内选择
+        2.语法
+            foreign key(参考字段名)
+            references 主表(被参考字段名)
+            on delete 级联动作
+            on update 级联动作
+        3.使用规则
+            1.主表, 从表 字段数据类型要一致
+            2.主表 被参考字段: 主键
+        4.示例
+            1.缴费信息表(财务)
+
+            id 姓名     班级    缴费金额
+            1  唐伯虎   AID08   300
+            2  点秋香   AID08   200
+
+            主表:
+            create table jftab( 
+                id int primary key, 
+                name varchar(20) not null, 
+                class char(5) default 'AID', 
+                money smallint )charset = utf8;
+
+
+            2.学生信息表(班主任)
+
+            stu_id 姓名 缴费金额
+        
+            从表:
+             create table bjtab( 
+                 stu_id int, 
+                 name varchar(15), 
+                 money smallint, 
+                 foreign key(stu_id) references jftab(id) 
+                 on delete cascade 
+                 on update cascade );
+
+        5.删除
+            1.查看外键名
+                show create table bjtab;
+            2.删除外键
+                alter table 表名 drop foreign key 外建名;
+        6.已有表格添加外键
+            alter table 表名 add foreign key(stu_id) 
+            references 主表(被参考字段名)
+            on delete 级联动作
+            on update 级联动作 
+        7.级联动作
+            1.cascade
+                数据级联删除,级联更新(参考字段)
+            2.set null      
+                从表如果有想关联记录,字段值设置为null
+            3.restrict(default)
+                主表删除、更新,从表相关联记录字段值为NULL
+
+综述：两张表，一张顾客信息表customers，一张订单表orders
+1、创建一张顾客信息表customers，字段要求如下：
+  c_id 类型为整型，设置为主键，并设置为自增长属性
+  c_name 字符类型，变长，宽度为20
+  c_age 微小整型，取值范围为0~255(无符号)
+  c_sex 枚举类型，要求只能在('M','F')中选择一个值
+  c_city 字符类型，变长，宽度为20
+  c_salary 浮点类型，要求整数部分最大为10位，小数部分为2位
+
+  在表中任意插入3条记录,c_name为"Zhangsan","Lisi","Wangwu", c_city尽量	写"Beijing","Shanghai" ......
+
+    insert into customers values
+    (1,"Zhangsan",25,"M","Beijing",8000),
+    (2,"Lisi",30,"F","Shanghai",10000),
+    (3,"Wangwu",27,"M","Shenzhen",8000);
+
+2、创建一张订单表orders，字段要求如下：
+  o_id 整型
+  o_name 字符类型，变长，宽度为30
+  o_price 浮点类型，整数最大为10位，小数部分为2位
+  设置此表中的o_id字段为customers表中c_id字段的外键,更新删除同步
+
+  在表中任意插入5条记录(注意外键限制)
+  o_name分别为"iphone","ipad","iwatch","mate9","r11",其他信息自己定
+    insert into orders values
+    (1,"iphone",5288),
+    (1,"ipad",3299),
+    (3,"mate9",3688),
+    (2,"iwatch",2222),
+    (2,"r11",4400);
+
+3、返回customers表中，工资大于4000元，或者年龄小于29岁，满足这样条件的前2条记录
+
+4、把customers表中，年龄大于等于25岁，并且地址是北京或者上海，这样的人的工资上调15%
+ 	
+5、把customers表中，城市为北京的顾客，按照工资降序排列，并且只返回结果中的第一条记录	
+
+6、选择工资c_salary最少的顾客的信息
+	
+7、找到工资大于5000的顾客都买过哪些产品的记录明细
+					
+8、删除外键限制
+			
+9、删除customers主键限制
+  1、删除自增长属性
+  2、删除主键限制
+
+
+            
+        
+
+
+

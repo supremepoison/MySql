@@ -1,0 +1,250 @@
+Day02 笔记
+
+1.表字段操作
+    1.语法:  alter table 表名 执行动作;
+    2.添加字段(add)
+        alter table 表名 add 字段名 数据类型;
+        alter table 表名 add 字段名 数据类型 first;
+        alter table 表名 add 字段名 数据类型 after 字段名;
+    3.删除字段(drop)
+        alter table 表名 drop 字段名;
+    4.修改数据类型(modify)
+        alter table 表名 modify 字段名 新数据类型;
+    5.字符类型宽度和数值类型宽度的区别
+        1.数值类型宽度为显示宽度,只用于select查询时显示,和存储无关,可用zerofill来查看效果
+        2.字符类型的宽度超过之后无法存储
+    6.练习
+        1.创建库 studb2
+        2.在studb2中创建表t1, 字段有三个
+            name , age , phnumber char(11)
+        3.查看t1表的表结构
+        4.在t1表中第一个字段添加id字段,要求显示宽度为3,位数不够用0填充
+        5.把phnumber 的数据类型改为bigint
+        6.在t1表中最后一个字段添加字段address
+        7.删除表中age字段
+        8.查看t1表结构
+
+2.数据类型 
+    1.数值类型
+    2.字符类型
+    3.枚举类型
+        1.单选: enum(值1,值2,值3....)
+        2.多选: set(值1,值2,值3...)
+
+    4.日期时间类型
+        1.date: 'YYYY-MM-DD'
+        2.time: 'HH:MM:SS'
+        3.datetime : 'YYYY-MM-DD HH:MM:SS'
+        4.timestamp : 'YYYY-MM-DD HH:MM:SS'
+        5.注意
+            1.datetime : 不给值默认返回NULL
+            2.timestamp : 不给值默认返回系统当前时间
+        6.示例
+            1.创建用户充值表
+                create table t7(
+                    id int,
+                    username varchar(20),
+                    password varchar(20),
+                    money int,
+                    birthday date,
+                    toptime timestamp
+                )charset utf-8;
+    1、查找2018年8月30日用户充值的详细信息
+      select * from t2 where date(cztime)="2018-08-30";
+    2、查找2018年8月份所有用户充值的信息
+      select * from t2 where
+      date(cztime)>="2018-07-01" and date(cztime)<="2018-07-31";
+    3、查找2018年08月30日 08:00-10:00之间用户充值信息
+      select * from t2 where
+      cztime>="2018-08-30 08:00:00" and cztime<="2018-08-30 10:00:00";
+
+3.日期时间函数
+    1.now()         返回当前时间
+    2.curdate()     返回日期
+    3.curtime()     返回时间
+    4.year(date):   取出年份
+    5.date(date):   取出年月日
+    6.time(date):   取出时分秒
+
+4.日期时间运算
+    1.语法格式
+        select * from 表名 where
+        字段名 运算符(时间now()-interval 时间间隔单位);
+        
+        时间间隔单位:
+        1 day | 2 hour | 3 year | 3 month | 
+    2.示例
+        1.查询一天以内的充值记录
+        select * from t7 where 
+        toptime >=(now()-interval 1 day);
+5.表记录的管理
+    1.删除表记录(delete)
+        1.delete from 表名 where 条件;      #不加 where条件,全部删除记录
+    2.更改表记录(update)
+        1.update 表名 set 字段名 = 值1, 字段2=值2 where 条件    #不加 where条件,全部更改表记录
+
+6.运算符操作
+    1.数值比较&&字符比较&&逻辑比较
+        1. 数值比较: = != > >= < <=
+        2. 字符比较: = !=
+        3. 逻辑比较: and, or, between 值1 and 值2
+        4、练习
+            1、查找攻击力高于150的英雄的名字和攻击值
+                select name,gongji from sanguo
+            where gongji>150;
+            2、将赵云的攻击力设置为360,防御力设置为88,名字改为赵子龙
+                update sanguo set gongji=360,fangyu=88,name="赵子龙" where name="赵云";
+            3、将吴国英雄中攻击值为110的英雄的攻击值改为100,防御力改为60
+                update sanguo set gongji=100,fangyu=60
+            where country="吴国" and gongji=110;
+            4、查找蜀国和魏国的英雄信息
+                select * from sanguo where
+            country="蜀国" or country="魏国";
+            5、找出攻击力高于200的蜀国英雄的名字、攻击值和国家
+                select name,gongji,country from sanguo 
+            where
+                gongji>200 and country="蜀国";
+    2.范围内比较
+        1.where 字段名 in(值1,值2,....)
+        2.where 字段名 not in(值1,值2,...)
+        3、练习
+            1、查找攻击值100-200之间的蜀国英雄信息
+                select * from sanguo 
+                where
+                (gongji between 100 and 200) and country="蜀国";
+            2、查找蜀国和吴国以外的国家的女英雄信息
+                select * from sanguo 
+                where country not in("蜀国","吴国") and sex="女";
+            3、查找id为1、3或5的蜀国英雄 和 貂蝉的信息
+                select * from sanguo
+                where
+                (id in(1,3,5) and country="蜀国") or name="貂蝉";
+        
+    3. 匹配空 非空
+        1. where name is NULL
+        2. where name is not NULL
+        3、练习
+            1、查找姓名为 NULL 的蜀国男英雄信息
+                select * from sanguo
+            where
+                name is NULL and country="蜀国" and sex="男";
+            2、查找姓名为 "" 的英雄信息
+                select * from sanguo where name="";
+            3、在所有蜀国英雄中查找攻击力大于150的并且名字不为NULL的英雄的姓名、攻击值和国家
+                select name,gongji,country from sanguo
+            where
+                country="蜀国" and gongji>150 and name is not NULL;
+            4、查找魏蜀两国英雄中攻击力小于200并且防御力小于80的英雄信息
+                select * from sanguo
+            where
+                country in("魏国","蜀国") and gongji<200 and fangyu<80;rom sanguo where name is NULL and country = '蜀国' and sex = '男';
+    4.注意
+        1. NULL : 空值,只能用is, is not 去匹配
+        2. '' : 空字符串,用 = != 去匹配
+
+    5.模糊查询(like)
+        1.where 字段名 like 表达式
+        2.表达式
+            %: 匹配0到多个字符
+            _: 匹配1个字符
+        2.示例
+            select name from sanguo where name like '_%_'; #至少两个字符
+            select name from sanguo where name like '%';    #所有字符,匹配不出NULL
+            select name from sanguo where name like '___';  #三个字符
+            select name from sanguo where name like '赵%';  #第一个字符必须是赵
+
+7.SQL查询
+    1.总结
+        3.select ...聚合函数 from 表名
+        1.where ...
+        2.group by ...
+        4.having ...
+        5.order by ...
+        6.limit ...;
+
+    2.order by: 给查询的结果进行排序
+        1. ...order by 字段名 ASC(默认)/DESC
+        2. 示例:
+            1.将所有英雄按防御值从高到低排序
+            select * from sanguo order by fangyu DESC;
+            2.将蜀国英雄按攻击值从高到第排序
+            select * from sanguo where country = '蜀国' order by gongji DESC;
+            3.将蜀国魏国英雄中名字为3个字的英雄按防御值升序排列
+            select * from sanguo where country in ('蜀国','魏国') and name like '___' order by fangyu;
+    3.limit(永远放在SQL语句的最后)
+        1.用法
+            1.limit n : 显示n 条记录
+            2.limit m,n: 从第m+1条记录开始,显示n条
+                limit 2,3 显示 3,4,5三条记录
+        2.示例
+            1.在蜀国英雄中查找防御值倒数第二名至倒数第四名的英雄 
+            select * from sanguo where country = '蜀国' order by fangyu limit 1,3;
+            2.在蜀国英雄中,查找攻击值前3名且名字不为NULL的姓名,攻击值和国家
+            select name,gongji,country from sanguo where name is not NULL and country = '蜀国' order by gongji DESC limit 3;
+        3.分页
+            每页显示5(m)条记录,显示第4(n)页的记录
+            limit 15,5
+            limit (n-1)*m, m
+    4.聚合函数
+        1.分类
+            avg(字段): 平均值
+            max(字段): 最大值
+            min(字段): 最小值
+            sum(字段): 求和
+            count(字段): 统计该字段记录的条数
+        2.示例
+            1.攻击力最强值是多少?
+            select max(gongji) from sanguo;
+            2.统计id和name分别有几套记录?
+            select count(id) as id, count(name) as name from sanguo;
+            3.统计蜀国英雄中攻击值大于200 的英雄数量
+            select count(id) from sanguo where gongji > 200 and country = '蜀国';
+    5.group by
+        1.计算每个国家的平均攻击力
+         select country, avg(gongji) from sanguo group by country;
+         2.查找所有国家的男英雄中,英雄数量最多的前两名的国家名称及英雄数量
+         select country,count(*) as num from sanguo where sex = '男' group by country order by num desc limit 2; 
+
+
+
+            先分组     再聚合    再去重
+            蜀国       
+            蜀国
+            蜀国       200       蜀国
+
+            魏国
+            魏国       200       魏国
+
+            吴国       100       吴国
+        3.注意
+            1.group by 后字段名必须要为select后的字段
+            2.如果查询字段和group后字段不一致,则必须对该字段进行聚合处理(聚合函数)
+
+    6.having: 对分组聚合后的结果进行进一步筛选
+        1.示例
+            找出平均攻击力大于105的国家前2名,显示国家名称和平均攻击力
+            select country, avg(gongji) as avg from sanguo 
+            group by country 
+            having avg > 105 
+            order by avg DESC 
+            limit 2;
+        2.注意
+            1、having语句通常和group by语句联合使用,过滤由group by语句返回的记录集
+            2、where只能操作表中实际存在字段,having语句可操作由聚合函数生成的显示列
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

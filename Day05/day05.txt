@@ -1,0 +1,128 @@
+day05笔记
+1.事务和事务回滚
+    1.定义: 一件事从开始发生到结束的过程
+    2.作用: 确保数据的一致性
+    3.事务和事务回滚应用
+        SQL命令默认自动提交到数据库执行
+        show variables like 'autocommit'
+        1.开启事务
+            mysql>begin;
+
+        2.停止事务
+            mysql>commit; | rollback;
+
+        3、案例
+            1、背景
+                你 ：建行卡
+                朋友 ：工行卡
+                你在建行自动取款机 给你朋友 转5000块钱
+            2、建表
+                表1、CCB
+                    create table CCB(
+                        name varchar(20),
+                        money decimal(20,2)
+                        );
+                        insert into CCB values("有钱人",100000);
+                表2、ICBC
+                    create table ICBC(
+                        name varchar(20),
+                        money decimal(20,2)
+                        );
+                        insert into ICBC values("没钱人",0);
+            3、开始转账
+                成功：
+                    mysql> begin;
+                    mysql> update CCB set money=money-5000 where name="有钱人";
+                    mysql> update ICBC set money=money+5000 where name="没钱人";
+                    mysql> commit;
+                    #####转账成功#####
+
+                失败 ：
+                    mysql> begin;
+                    mysql> update CCB set money=money-5000 where name="有钱人";
+                    mysql> update ICBC set 工行服务器故障... ;
+                    mysql> rollback;
+                    #####转账失败#####
+        
+    4.注意
+        事务只针对于表记录操作(增删改),对库和表的操作无效
+
+
+2.与Python交互
+    1.python3
+        1模块名 ：pymysql
+        2.安装 ：
+            1.在线:sudo pip3 install pymysql ==(指定版本,不指定是最新版本)
+                ##安装pip3##
+                    sudo apt-get install python3-pip  
+
+            2.离线:
+                解压:pymysql-0.7.11.tar.gz
+                    $ tar -zxvf pymysql-0.7.11.tar.gz
+                    $ tar -xf pymysql-0.7.11.tar.gz
+                    $ cd pymysql10.7.11
+                    $ python3 setup.py install  README
+    2.python2
+        1.模块名: MySQLdb
+        2.安装: sudo pip install mysql-python
+    3.环境准备
+    4.pymysql 使用流程
+        1.数据库连接对象 db : pymysql.connect()
+        2.游标对象         : cur = db.cursor()
+        3.执行命令         : cur.execute('sql命令')
+        4.提交            : db.commit()
+        5.关闭游标         : cur.close()
+        6.关闭数据库连接    : db.close()
+
+    5.数据库连接对象(db)方法
+        1.db.commit():      提交到数据库执行
+        2.db.rollback():    回滚
+        3.db.close():       断开数据库连接
+        4.db.cursor():      创建游标对象
+    6.游标对象(cur)方法
+        1.cur.ececute(sql命令):     执行sql命令
+        2.cur.close():             关闭游标对象
+        3.cur.fetchone():          取第一条(查询)
+        4.cur.fetchmany(number):    取n条(查询)
+        4.cur.fetchall():           取所有(查询)
+
+    7.connect() 连接对象的参数:
+        1.host:     主机地址
+        2.user:     用户名
+        3.password: 密码
+        4.database: 库名
+        5.charset:  字符集,编码方式,推荐用utf8
+        6.port:     端口号(3306)
+
+
+3.ORM(Object Relation Mapping对象关系映射)
+    1.定义
+        把对象的模型映射到MySQL数据库中
+    2.sqlalchemy安装
+        在线: sudo pip3 install sqlalchemy
+        离线:
+            $ tar -xf sql ... tar.gz
+            $ cd sqlalchemy
+            $ sudo python3 setup.py install
+    3.示例
+        class User:
+            __tablename__ = "t1"
+            id = Column(Integer,primary_key=True)
+            name = Column(String(20))
+    4.映射类型
+        1.python类(class) <--> 数据库中表
+            class User ...     t123
+        2.python中类属性 <--> 数据库中表字段(id...)
+            id= Column(Integer)
+        3.关系映射
+            1:1 : 主外键关联,添加唯一的约束
+            1:n : 主外键关联
+            M:n : 通过中间表实现,见 多对多关联实现.png
+    5.示例:(sqlalchemy_8.pys)
+        1.在studb5库中创建表t123,表中字段有
+        id 整型, 设置为主键,自增长
+        name 字符类型 宽度20
+        phnumber 字符类型,宽度11
+
+
+
